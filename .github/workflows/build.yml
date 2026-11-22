@@ -1,0 +1,35 @@
+name: Build VN PC
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # Self-contained: на ноутбуці не треба встановлювати .NET
+      # ReadyToRun: швидший запуск на слабкому процесорі
+      - name: Publish
+        run: dotnet publish VNPC.csproj -c Release -r win-x64 --self-contained true -p:PublishReadyToRun=true -o out
+
+      - name: Download FFmpeg
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip" -OutFile ffmpeg.zip
+          Expand-Archive ffmpeg.zip -DestinationPath ffmpeg_tmp
+          $ff = Get-ChildItem -Path ffmpeg_tmp -Recurse -Filter ffmpeg.exe | Select-Object -First 1
+          Copy-Item $ff.FullName out\
+          Copy-Item (Join-Path $ff.DirectoryName "ffprobe.exe") out\
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VNPC-Windows
+          path: out
