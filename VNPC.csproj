@@ -12,4 +12,9 @@
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- WPF SDK прибирає System.IO з неявних using, повертаємо -->
+    <Using Include="System.IO" />
+  </ItemGroup>
+
 </Project>
